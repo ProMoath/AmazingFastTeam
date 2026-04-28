@@ -1,0 +1,92 @@
+name: Deploy to InfinityFree
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Replace connection.php with production settings
+        run: |
+          cat > connection.php << 'EOF'
+          <?php 
+              \$host = "${{ secrets.DB_HOST }}";
+              \$user = "${{ secrets.DB_USER }}";
+              \$password = "${{ secrets.DB_PASSWORD }}";
+              \$dbname = "${{ secrets.DB_NAME }}";
+
+              try{
+                  \$connection = new PDO(
+                      "mysql:host=\$host;dbname=\$dbname", 
+                      \$user, \$password
+                  );
+                  \$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+              }
+              catch(PDOException \$e){
+                  echo "<script>alert('Connection Faild: {\$e->getMessage()}')</script>";
+              }
+
+              function selectAll(\$table){
+                  global \$connection;
+                  try{
+                      \$statement = \$connection->prepare(
+                          "SELECT * FROM \$table"
+                      );
+                      \$statement->execute();
+                      return \$statement->fetchAll(PDO::FETCH_ASSOC);
+                  }
+                  catch(PDOException \$e){
+                      echo "<script>alert('Error: {\$e->getMessage()}')</script>";
+                  }
+              }
+
+              function countAll(\$table, \$column='NO'){
+                  global \$connection;
+                  try{
+                      \$statement = \$connection->prepare(
+                          "SELECT COUNT(\$column) FROM \$table"
+                      );
+                      \$statement->execute();
+                      return \$statement->fetchAll(PDO::FETCH_COLUMN)[0];
+                  }
+                  catch(PDOException \$e){
+                      echo "<script>alert('Error: {\$e->getMessage()}')</script>";
+                  }
+              }
+
+              function countWhere(\$table, \$condition){
+                  global \$connection;
+                  try{
+                      \$statement = \$connection->prepare(
+                          "SELECT COUNT(\$condition) FROM \$table WHERE \$condition = 1"
+                      );
+                      \$statement->execute();
+                      return \$statement->fetchAll(PDO::FETCH_COLUMN)[0];
+                  }
+                  catch(PDOException \$e){
+                      echo "<script>alert('Error: {\$e->getMessage()}')</script>";
+                  }
+              }
+          ?>
+          EOF
+
+      - name: FTP Deploy
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: htdocs/
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/*.sql
+            **/README.md
+            **/node_modules/**
