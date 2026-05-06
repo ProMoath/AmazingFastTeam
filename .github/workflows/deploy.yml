@@ -17,61 +17,61 @@ jobs:
         run: |
           cat > connection.php << 'EOF'
           <?php 
-              \$host = "${{ secrets.DB_HOST }}";
-              \$user = "${{ secrets.DB_USER }}";
-              \$password = "${{ secrets.DB_PASSWORD }}";
-              \$dbname = "${{ secrets.DB_NAME }}";
+              $host = "${{ secrets.DB_HOST }}";
+              $user = "${{ secrets.DB_USER }}";
+              $password = "${{ secrets.DB_PASSWORD }}";
+              $dbname = "${{ secrets.DB_NAME }}";
 
               try{
-                  \$connection = new PDO(
-                      "mysql:host=\$host;dbname=\$dbname", 
-                      \$user, \$password
+                  $connection = new PDO(
+                      "mysql:host=$host;dbname=$dbname", 
+                      $user, $password
                   );
-                  \$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                  $connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
               }
-              catch(PDOException \$e){
-                  echo "<script>alert('Connection Faild: {\$e->getMessage()}')</script>";
-              }
-
-              function selectAll(\$table){
-                  global \$connection;
-                  try{
-                      \$statement = \$connection->prepare(
-                          "SELECT * FROM \$table"
-                      );
-                      \$statement->execute();
-                      return \$statement->fetchAll(PDO::FETCH_ASSOC);
-                  }
-                  catch(PDOException \$e){
-                      echo "<script>alert('Error: {\$e->getMessage()}')</script>";
-                  }
+              catch(PDOException $e){
+                  echo "<script>alert('Connection Faild: {$e->getMessage()}')</script>";
               }
 
-              function countAll(\$table, \$column='NO'){
-                  global \$connection;
+              function selectAll($table){
+                  global $connection;
                   try{
-                      \$statement = \$connection->prepare(
-                          "SELECT COUNT(\$column) FROM \$table"
+                      $statement = $connection->prepare(
+                          "SELECT * FROM $table"
                       );
-                      \$statement->execute();
-                      return \$statement->fetchAll(PDO::FETCH_COLUMN)[0];
+                      $statement->execute();
+                      return $statement->fetchAll(PDO::FETCH_ASSOC);
                   }
-                  catch(PDOException \$e){
-                      echo "<script>alert('Error: {\$e->getMessage()}')</script>";
+                  catch(PDOException $e){
+                      echo "<script>alert('Error: {$e->getMessage()}')</script>";
                   }
               }
 
-              function countWhere(\$table, \$condition){
-                  global \$connection;
+              function countAll($table, $column='NO'){
+                  global $connection;
                   try{
-                      \$statement = \$connection->prepare(
-                          "SELECT COUNT(\$condition) FROM \$table WHERE \$condition = 1"
+                      $statement = $connection->prepare(
+                          "SELECT COUNT($column) FROM $table"
                       );
-                      \$statement->execute();
-                      return \$statement->fetchAll(PDO::FETCH_COLUMN)[0];
+                      $statement->execute();
+                      return $statement->fetchAll(PDO::FETCH_COLUMN)[0];
                   }
-                  catch(PDOException \$e){
-                      echo "<script>alert('Error: {\$e->getMessage()}')</script>";
+                  catch(PDOException $e){
+                      echo "<script>alert('Error: {$e->getMessage()}')</script>";
+                  }
+              }
+
+              function countWhere($table, $condition){
+                  global $connection;
+                  try{
+                      $statement = $connection->prepare(
+                          "SELECT COUNT($condition) FROM $table WHERE $condition = 1"
+                      );
+                      $statement->execute();
+                      return $statement->fetchAll(PDO::FETCH_COLUMN)[0];
+                  }
+                  catch(PDOException $e){
+                      echo "<script>alert('Error: {$e->getMessage()}')</script>";
                   }
               }
           ?>
